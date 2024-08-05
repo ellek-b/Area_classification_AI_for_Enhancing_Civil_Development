@@ -1,0 +1,137 @@
+from google.colab import drive
+drive.mount('/content/drive')
+from os import path as path
+pip install BRAILS
+import tensorflow
+import keras
+import brails
+import pandas as pd
+import numpy
+import sklearn
+import requests
+import os
+import json
+def globe_oberver_photos(api_url, params = None, save_dir = "photos"):
+  if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+  try:
+    response = requests.get(api_url, params=params)
+    response.raise_for_status()
+    data = response.json()
+
+    photos = data.get("photos", [])
+    for photo in photos:
+      direction = photo.get("direction")
+      if direction in ["N", "S", "E", "W"]:
+        photo_url = photo.get("photoUrl", "")
+        photo_id = photo.get("photoId", "")
+    if photo_url and photo_id:
+      photo_response = requests.get(photo_url)
+      photo_response.raise_for_status()
+
+      photo_path = os.path.join(save_dir, f"{photo_id}.jpg")
+      with open(photo_path, "wb") as file:
+        file.write(photo_response.content)
+      print(f"saved photo {photo_id} to {photo_path}")
+
+  except requests.exceptions.HTTPError as http_err:
+    print(f'HTTP error occurred: {http_err}')
+  except Exception as err:
+    print(err)
+
+df = pd.read_csv('/content/drive/MyDrive/ AI Area Classification Research/SEES2024_GLOBE_url.csv')
+print(df)
+# Iterate through each row in the DataFrame
+for index, row in df.iterrows():
+    api_url = row['GO UserID URL']
+    globe_oberver_photos(api_url, params)
+
+from keras.models import load_model  # TensorFlow is required for Keras to work
+from PIL import Image, ImageOps  # Install pillow instead of PIL
+import numpy as np
+
+# Disable scientific notation for clarity
+np.set_printoptions(suppress=True)
+
+# Load the model
+model = load_model("/content/drive/MyDrive/ AI Area Classification Research/Urbanization_Classification/UC_Model.h5", compile=False)
+
+# Load the labels
+class_names = open("/content/drive/MyDrive/ AI Area Classification Research/Urbanization_Classification/labels.txt", "r").readlines()
+
+# Create the array of the right shape to feed into the keras model
+# The 'length' or number of images you can put into the array is
+# determined by the first position in the shape tuple, in this case 1
+data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+
+# Replace this with the path to your image
+image = Image.open("/content/drive/MyDrive/ AI Area Classification Research/testing_data/rural/rural21.jpg").convert("RGB")
+
+# resizing the image to be at least 224x224 and then cropping from the center/content/drive/MyDrive/ AI Area Classification Research/testing_data/rural/rural11.jpeg
+size = (224, 224)
+image = ImageOps.fit(image, size, Image.Resampling.LANCZOS)
+
+# turn the image into a numpy array
+image_array = np.asarray(image)
+
+# Normalize the image
+normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
+
+# Load the image into the array
+data[0] = normalized_image_array
+
+# Predicts the model
+prediction = model.predict(data)
+index = np.argmax(prediction)
+class_name = class_names[index]
+confidence_score = prediction[0][index]
+
+# Print prediction and confidence score
+print("Class:", class_name[2:], end="")
+print("Confidence Score:", confidence_score)
+
+from keras.models import load_model  # TensorFlow is required for Keras to work
+from PIL import Image, ImageOps  # Install pillow instead of PIL
+import numpy as np
+from google.colab import drive
+drive.mount('/content/drive')
+# Disable scientific notation for clarity
+np.set_printoptions(suppress=True)
+
+# Load the model
+model = load_model("/content/drive/MyDrive/ AI Area Classification Research/Urbanization_Classification/UC_Model.h5", compile=False)
+
+# Load the labels
+class_names = open("/content/drive/MyDrive/ AI Area Classification Research/Urbanization_Classification/labels.txt", "r").readlines()
+
+# Create the array of the right shape to feed into the keras model
+# The 'length' or number of images you can put into the array is
+# determined by the first position in the shape tuple, in this case 1
+data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+
+# Replace this with the path to your image
+image = Image.open("/content/drive/MyDrive/ AI Area Classification Research/testing_data/suburban/st_36.jpg").convert("RGB")
+
+# resizing the image to be at least 224x224 and then cropping from the center/content/drive/MyDrive/ AI Area Classification Research/testing_data/rural/rural11.jpeg
+size = (224, 224)
+image = ImageOps.fit(image, size, Image.Resampling.LANCZOS)
+
+# turn the image into a numpy array
+image_array = np.asarray(image)
+
+# Normalize the image
+normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
+
+# Load the image into the array
+data[0] = normalized_image_array
+
+# Predicts the model
+prediction = model.predict(data)
+index = np.argmax(prediction)
+class_name = class_names[index]
+confidence_score = prediction[0][index]
+
+# Print prediction and confidence score
+print("Class:", class_name[2:], end="")
+print("Confidence Score:", confidence_score)
+
